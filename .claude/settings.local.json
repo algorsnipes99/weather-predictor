@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod +x /c/dev/weather-predictor/scripts/docker-build.sh)"
+    ]
+  }
+}
