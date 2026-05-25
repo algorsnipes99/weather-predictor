@@ -1,15 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { IndoorSightseeingScorer } from "./indoor-sightseeing.scorer";
-import { mapOpenMeteoForecastToDailyWeather } from "../../weather/open-meteo.mapper";
+import { IndoorSightseeingScorer } from "../../../../src/modules/activities/scoring/indoor-sightseeing.scorer";
+import { mapOpenMeteoForecastToDailyWeather } from "../../../../src/modules/weather/open-meteo.mapper";
 import {
   extremeBadWeatherResponse,
   mixedForecastResponse,
-} from "../../../test/fixtures/open-meteo-forecast.fixture";
+} from "../../../fixtures/open-meteo-forecast.fixture";
 import {
   londonLocation,
   capeTownLocation,
-} from "../../../test/fixtures/locations.fixture";
-import { DailyWeather } from "../../weather/weather.types";
+} from "../../../fixtures/locations.fixture";
+import { DailyWeather } from "../../../../src/modules/weather/weather.types";
 
 describe("IndoorSightseeingScorer", () => {
   const scorer = new IndoorSightseeingScorer();

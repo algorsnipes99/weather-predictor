@@ -1,4 +1,4 @@
-import { ResolvedLocation } from "../../modules/location/location.types";
+import { ResolvedLocation } from "../../src/modules/location/location.types";
 
 export const capeTownLocation: ResolvedLocation = {
   name: "Cape Town",

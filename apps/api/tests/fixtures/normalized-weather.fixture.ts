@@ -1,4 +1,4 @@
-import { DailyWeather, DailyMarineWeather } from "../../modules/weather/weather.types";
+import { DailyWeather, DailyMarineWeather } from "../../src/modules/weather/weather.types";
 
 /**
  * Derived from mixedForecastResponse (Cape Town):

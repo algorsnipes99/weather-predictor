@@ -1,4 +1,4 @@
-import { OpenMeteoMarineResponse } from "../../modules/weather/open-meteo.types";
+import { OpenMeteoMarineResponse } from "../../src/modules/weather/open-meteo.types";
 
 export const goodSurfMarineResponse: OpenMeteoMarineResponse = {
   latitude: -33.9249,

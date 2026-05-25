@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { mapOpenMeteoForecastToDailyWeather } from "./open-meteo.mapper";
+import { mapOpenMeteoForecastToDailyWeather } from "../../../src/modules/weather/open-meteo.mapper";
 import {
   mixedForecastResponse,
   snowyForecastResponse,
-} from "../../test/fixtures/open-meteo-forecast.fixture";
-import { OpenMeteoForecastResponse } from "./open-meteo.types";
+} from "../../fixtures/open-meteo-forecast.fixture";
+import { OpenMeteoForecastResponse } from "../../../src/modules/weather/open-meteo.types";
 
 describe("mapOpenMeteoForecastToDailyWeather", () => {
   it("returns 7 items from mixedForecastResponse", () => {

@@ -1,4 +1,4 @@
-import { OpenMeteoForecastResponse } from "../../modules/weather/open-meteo.types";
+import { OpenMeteoForecastResponse } from "../../src/modules/weather/open-meteo.types";
 
 export const mixedForecastResponse: OpenMeteoForecastResponse = {
   latitude: -33.9249,

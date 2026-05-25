@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { SkiingScorer } from "./skiing.scorer";
-import { mapOpenMeteoForecastToDailyWeather } from "../../weather/open-meteo.mapper";
+import { SkiingScorer } from "../../../../src/modules/activities/scoring/skiing.scorer";
+import { mapOpenMeteoForecastToDailyWeather } from "../../../../src/modules/weather/open-meteo.mapper";
 import {
   snowyForecastResponse,
   mixedForecastResponse,
-} from "../../../test/fixtures/open-meteo-forecast.fixture";
-import { zermattLocation, capeTownLocation } from "../../../test/fixtures/locations.fixture";
+} from "../../../fixtures/open-meteo-forecast.fixture";
+import { zermattLocation, capeTownLocation } from "../../../fixtures/locations.fixture";
 
 describe("SkiingScorer", () => {
   const scorer = new SkiingScorer();

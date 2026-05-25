@@ -1,15 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { SurfingScorer } from "./surfing.scorer";
-import { mapOpenMeteoForecastToDailyWeather } from "../../weather/open-meteo.mapper";
-import { mapOpenMeteoMarineToDailyWeather } from "../../weather/open-meteo-marine.mapper";
+import { SurfingScorer } from "../../../../src/modules/activities/scoring/surfing.scorer";
+import { mapOpenMeteoForecastToDailyWeather } from "../../../../src/modules/weather/open-meteo.mapper";
+import { mapOpenMeteoMarineToDailyWeather } from "../../../../src/modules/weather/open-meteo-marine.mapper";
 import {
   mixedForecastResponse,
-} from "../../../test/fixtures/open-meteo-forecast.fixture";
+} from "../../../fixtures/open-meteo-forecast.fixture";
 import {
   goodSurfMarineResponse,
   poorSurfMarineResponse,
-} from "../../../test/fixtures/open-meteo-marine.fixture";
-import { capeTownLocation } from "../../../test/fixtures/locations.fixture";
+} from "../../../fixtures/open-meteo-marine.fixture";
+import { capeTownLocation } from "../../../fixtures/locations.fixture";
 
 describe("SurfingScorer", () => {
   const scorer = new SurfingScorer();

@@ -1,17 +1,17 @@
 import { describe, it, expect } from "vitest";
-import { ActivityRankingService } from "./activity-ranking.service";
-import { SkiingScorer } from "./scoring/skiing.scorer";
-import { SurfingScorer } from "./scoring/surfing.scorer";
-import { OutdoorSightseeingScorer } from "./scoring/outdoor-sightseeing.scorer";
-import { IndoorSightseeingScorer } from "./scoring/indoor-sightseeing.scorer";
-import { mapOpenMeteoForecastToDailyWeather } from "../weather/open-meteo.mapper";
-import { mapOpenMeteoMarineToDailyWeather } from "../weather/open-meteo-marine.mapper";
+import { ActivityRankingService } from "../../../src/modules/activities/activity-ranking.service";
+import { SkiingScorer } from "../../../src/modules/activities/scoring/skiing.scorer";
+import { SurfingScorer } from "../../../src/modules/activities/scoring/surfing.scorer";
+import { OutdoorSightseeingScorer } from "../../../src/modules/activities/scoring/outdoor-sightseeing.scorer";
+import { IndoorSightseeingScorer } from "../../../src/modules/activities/scoring/indoor-sightseeing.scorer";
+import { mapOpenMeteoForecastToDailyWeather } from "../../../src/modules/weather/open-meteo.mapper";
+import { mapOpenMeteoMarineToDailyWeather } from "../../../src/modules/weather/open-meteo-marine.mapper";
 import {
   mixedForecastResponse,
   extremeBadWeatherResponse,
-} from "../../test/fixtures/open-meteo-forecast.fixture";
-import { goodSurfMarineResponse } from "../../test/fixtures/open-meteo-marine.fixture";
-import { capeTownLocation, londonLocation } from "../../test/fixtures/locations.fixture";
+} from "../../fixtures/open-meteo-forecast.fixture";
+import { goodSurfMarineResponse } from "../../fixtures/open-meteo-marine.fixture";
+import { capeTownLocation, londonLocation } from "../../fixtures/locations.fixture";
 
 const allScorers = [
   new SkiingScorer(),
