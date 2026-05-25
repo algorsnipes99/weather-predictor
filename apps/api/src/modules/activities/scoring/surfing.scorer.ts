@@ -6,9 +6,18 @@ import { DailyWeather, DailyMarineWeather } from "../../weather/weather.types";
 
 const SEVERE_WEATHER_CODES = new Set([65, 75, 82, 95, 96, 99]);
 
+/**
+ * Scores surfing conditions using marine wave data combined with general weather.
+ * Degrades gracefully to a score of 5 (POOR) when marine data is unavailable,
+ * rather than throwing. Coastline proximity is not verified.
+ */
 export class SurfingScorer extends BaseActivityScorer {
   readonly activity: Activity = "SURFING";
 
+  /**
+   * Weights: wave height 45%, wave period 25%, wind 20%, weather comfort 10%.
+   * Returns POOR immediately if marine forecast data is missing.
+   */
   protected scoreDay(day: DailyWeather, marine?: DailyMarineWeather): DailyActivityScore {
     const reasons: string[] = [];
 

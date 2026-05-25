@@ -4,9 +4,18 @@ import { BaseActivityScorer } from "./base-activity-scorer";
 import { Activity, DailyActivityScore } from "../activity.types";
 import { DailyWeather } from "../../weather/weather.types";
 
+/**
+ * Scores skiing conditions based on snowfall, temperature, precipitation, and wind.
+ * Note: does not verify whether a ski resort is actually nearby — callers should
+ * communicate this limitation to end users.
+ */
 export class SkiingScorer extends BaseActivityScorer {
   readonly activity: Activity = "SKIING";
 
+  /**
+   * Weights: snow 40%, temperature 30%, precipitation 20%, wind 10%.
+   * Rain without snow and warm temperatures are heavily penalised.
+   */
   protected scoreDay(day: DailyWeather): DailyActivityScore {
     const reasons: string[] = [];
 

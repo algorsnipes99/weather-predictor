@@ -6,9 +6,17 @@ import { DailyWeather } from "../../weather/weather.types";
 
 const SEVERE_WEATHER_CODES = new Set([65, 75, 82, 95, 96, 99]);
 
+/**
+ * Scores outdoor sightseeing based on temperature comfort, dryness, wind,
+ * weather code severity, and cloud cover.
+ */
 export class OutdoorSightseeingScorer extends BaseActivityScorer {
   readonly activity: Activity = "OUTDOOR_SIGHTSEEING";
 
+  /**
+   * Weights: temperature comfort 40%, dryness 30%, wind 15%, weather code 10%, cloud cover 5%.
+   * Severe weather codes hard-cap the weather code sub-score at 10.
+   */
   protected scoreDay(day: DailyWeather): DailyActivityScore {
     const reasons: string[] = [];
     const avgTemp = (day.minTemperatureC + day.maxTemperatureC) / 2;

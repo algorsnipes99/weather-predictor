@@ -6,9 +6,18 @@ import { DailyWeather } from "../../weather/weather.types";
 
 const SEVERE_WEATHER_CODES = new Set([65, 75, 82, 95, 96, 99]);
 
+/**
+ * Scores indoor sightseeing as the inverse of outdoor suitability.
+ * High rain, extreme temperatures, strong wind, and severe weather codes
+ * all push the indoor score up.
+ */
 export class IndoorSightseeingScorer extends BaseActivityScorer {
   readonly activity: Activity = "INDOOR_SIGHTSEEING";
 
+  /**
+   * Weights: rain 35%, weather code badness 25%, uncomfortable temperature 25%, wind 15%.
+   * Intentionally mirrors OutdoorSightseeingScorer so the two invert each other.
+   */
   protected scoreDay(day: DailyWeather): DailyActivityScore {
     const reasons: string[] = [];
     const avgTemp = (day.minTemperatureC + day.maxTemperatureC) / 2;

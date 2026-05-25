@@ -4,11 +4,21 @@ import { ActivityScorer } from "./activity-scorer.interface";
 import { Activity, ActivityRanking, ActivityScoringInput, DailyActivityScore } from "../activity.types";
 import { DailyWeather, DailyMarineWeather } from "../../weather/weather.types";
 
+/**
+ * Shared scoring skeleton for all activity scorers.
+ * Subclasses implement `scoreDay` for their activity-specific logic;
+ * this class handles aggregation, averaging, and summary generation.
+ */
 export abstract class BaseActivityScorer implements ActivityScorer {
   abstract readonly activity: Activity;
 
+  /** Scores a single day — implemented per activity in each subclass. */
   protected abstract scoreDay(day: DailyWeather, marine?: DailyMarineWeather): DailyActivityScore;
 
+  /**
+   * Maps `scoreDay` over every day in the input, averages the results,
+   * and returns the full `ActivityRanking` with label and summary.
+   */
   score(input: ActivityScoringInput): ActivityRanking {
     const days = input.dailyWeather.map((day, i) =>
       this.scoreDay(day, input.marineWeather?.[i])
