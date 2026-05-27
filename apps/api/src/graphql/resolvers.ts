@@ -1,10 +1,13 @@
 import { WeatherService } from "../modules/weather/weather.service";
 import { ActivityRankingService } from "../modules/activities/activity-ranking.service";
 import { RankingCacheRepository } from "../modules/rankings/ranking-cache.repository";
+import { TokenPayload } from "../auth/jwt";
+
 export interface AppContext {
   weatherService: WeatherService;
   activityRankingService: ActivityRankingService;
   rankingCache: RankingCacheRepository | null;
+  user: TokenPayload;
 }
 
 export const resolvers = {
