@@ -12,6 +12,8 @@ import { DailyWeather, DailyMarineWeather } from "../../weather/weather.types";
 export abstract class BaseActivityScorer implements ActivityScorer {
   abstract readonly activity: Activity;
 
+  protected static readonly SEVERE_WEATHER_CODES = new Set([65, 75, 82, 95, 96, 99]);
+
   /** Scores a single day — implemented per activity in each subclass. */
   protected abstract scoreDay(day: DailyWeather, marine?: DailyMarineWeather): DailyActivityScore;
 

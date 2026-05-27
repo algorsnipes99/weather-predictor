@@ -26,23 +26,27 @@ export class HttpOpenMeteoClient implements OpenMeteoClient {
   private readonly marineBaseUrl =
     "https://marine-api.open-meteo.com/v1/marine";
 
-  /** Fetches the 7-day general forecast. Throws on network error or non-OK response. */
-  async getForecast(location: ResolvedLocation): Promise<OpenMeteoForecastResponse> {
-    const params = new URLSearchParams({
+  private buildParams(location: ResolvedLocation, daily: string[]): URLSearchParams {
+    return new URLSearchParams({
       latitude: String(location.latitude),
       longitude: String(location.longitude),
-      daily: [
-        "temperature_2m_min",
-        "temperature_2m_max",
-        "precipitation_sum",
-        "snowfall_sum",
-        "wind_speed_10m_max",
-        "weather_code",
-        "cloud_cover_mean",
-      ].join(","),
+      daily: daily.join(","),
       forecast_days: "7",
       ...(location.timezone ? { timezone: location.timezone } : {}),
     });
+  }
+
+  /** Fetches the 7-day general forecast. Throws on network error or non-OK response. */
+  async getForecast(location: ResolvedLocation): Promise<OpenMeteoForecastResponse> {
+    const params = this.buildParams(location, [
+      "temperature_2m_min",
+      "temperature_2m_max",
+      "precipitation_sum",
+      "snowfall_sum",
+      "wind_speed_10m_max",
+      "weather_code",
+      "cloud_cover_mean",
+    ]);
 
     const start = process.hrtime.bigint();
     const res = await fetch(`${this.forecastBaseUrl}?${params}`).catch((err) => {
@@ -61,18 +65,12 @@ export class HttpOpenMeteoClient implements OpenMeteoClient {
   async getMarineForecast(
     location: ResolvedLocation
   ): Promise<OpenMeteoMarineResponse | undefined> {
-    const params = new URLSearchParams({
-      latitude: String(location.latitude),
-      longitude: String(location.longitude),
-      daily: [
-        "wave_height_max",
-        "wave_period_max",
-        "swell_wave_height_max",
-        "wind_wave_height_max",
-      ].join(","),
-      forecast_days: "7",
-      ...(location.timezone ? { timezone: location.timezone } : {}),
-    });
+    const params = this.buildParams(location, [
+      "wave_height_max",
+      "wave_period_max",
+      "swell_wave_height_max",
+      "wind_wave_height_max",
+    ]);
 
     const start = process.hrtime.bigint();
     const res = await fetch(`${this.marineBaseUrl}?${params}`).catch(() => undefined);

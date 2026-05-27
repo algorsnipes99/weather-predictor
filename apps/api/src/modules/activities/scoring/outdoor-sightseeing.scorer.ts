@@ -4,8 +4,6 @@ import { BaseActivityScorer } from "./base-activity-scorer";
 import { Activity, DailyActivityScore } from "../activity.types";
 import { DailyWeather } from "../../weather/weather.types";
 
-const SEVERE_WEATHER_CODES = new Set([65, 75, 82, 95, 96, 99]);
-
 /**
  * Scores outdoor sightseeing based on temperature comfort, dryness, wind,
  * weather code severity, and cloud cover.
@@ -38,7 +36,7 @@ export class OutdoorSightseeingScorer extends BaseActivityScorer {
     const windScore = clamp(100 - (day.maxWindKph / 50) * 100);
     if (day.maxWindKph > 35) reasons.push(`Strong wind: ${day.maxWindKph}km/h`);
 
-    const isSevere = SEVERE_WEATHER_CODES.has(day.weatherCode);
+    const isSevere = BaseActivityScorer.SEVERE_WEATHER_CODES.has(day.weatherCode);
     const weatherCodeScore = isSevere ? 10 : 100;
     if (isSevere) reasons.push("Severe weather code");
 

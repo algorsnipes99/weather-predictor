@@ -4,8 +4,6 @@ import { BaseActivityScorer } from "./base-activity-scorer";
 import { Activity, DailyActivityScore } from "../activity.types";
 import { DailyWeather } from "../../weather/weather.types";
 
-const SEVERE_WEATHER_CODES = new Set([65, 75, 82, 95, 96, 99]);
-
 /**
  * Scores indoor sightseeing as the inverse of outdoor suitability.
  * High rain, extreme temperatures, strong wind, and severe weather codes
@@ -33,7 +31,7 @@ export class IndoorSightseeingScorer extends BaseActivityScorer {
     const windScore = clamp((day.maxWindKph / 60) * 100);
     if (day.maxWindKph > 50) reasons.push(`Too windy to be outside: ${day.maxWindKph}km/h`);
 
-    const isSevere = SEVERE_WEATHER_CODES.has(day.weatherCode);
+    const isSevere = BaseActivityScorer.SEVERE_WEATHER_CODES.has(day.weatherCode);
     const weatherCodeBadnessScore = isSevere ? 100 : day.precipitationMm > 5 ? 60 : 20;
     if (isSevere) reasons.push("Severe weather outside");
 

@@ -4,8 +4,6 @@ import { BaseActivityScorer } from "./base-activity-scorer";
 import { Activity, DailyActivityScore } from "../activity.types";
 import { DailyWeather, DailyMarineWeather } from "../../weather/weather.types";
 
-const SEVERE_WEATHER_CODES = new Set([65, 75, 82, 95, 96, 99]);
-
 /**
  * Scores surfing conditions using marine wave data combined with general weather.
  * Degrades gracefully to a score of 5 (POOR) when marine data is unavailable,
@@ -47,7 +45,7 @@ export class SurfingScorer extends BaseActivityScorer {
     const windScore = clamp(100 - (day.maxWindKph / 50) * 100);
     if (day.maxWindKph > 40) reasons.push(`Strong wind: ${day.maxWindKph}km/h`);
 
-    const isSevere = SEVERE_WEATHER_CODES.has(day.weatherCode);
+    const isSevere = BaseActivityScorer.SEVERE_WEATHER_CODES.has(day.weatherCode);
     const weatherComfortScore = isSevere ? 20 : day.precipitationMm > 15 ? 50 : 90;
     if (isSevere) reasons.push("Severe weather warning");
 
