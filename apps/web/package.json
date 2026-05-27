@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@apollo/client": "^3.9.0",
-    "@react-google-maps/api": "^2.19.3",
     "graphql": "^16.8.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"

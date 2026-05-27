@@ -7,9 +7,6 @@ COPY apps/web/package.json ./apps/web/
 
 RUN npm ci --workspace=apps/web
 
-ARG VITE_GOOGLE_MAPS_API_KEY
-ENV VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY
-
 COPY apps/web/index.html         ./apps/web/
 COPY apps/web/tsconfig.json      ./apps/web/
 COPY apps/web/vite.config.ts     ./apps/web/

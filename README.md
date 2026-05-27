@@ -16,7 +16,6 @@ Open `.env` and set:
 
 | Variable | Required | Description |
 |---|---|---|
-| `VITE_GOOGLE_MAPS_API_KEY` | Yes | Google Maps API key (enables location search) |
 | `POSTGRES_PASSWORD` | Yes | Postgres password — change from the default |
 | `JWT_SECRET` | Recommended | Secret used to sign auth tokens — set a long random string in production |
 | `POSTGRES_DB` | No | Database name (default: `weather_predictor`) |
