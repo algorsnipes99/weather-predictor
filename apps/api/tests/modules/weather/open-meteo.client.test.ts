@@ -5,6 +5,7 @@ import { capeTownLocation } from "../../fixtures/locations.fixture";
 import { mixedForecastResponse } from "../../fixtures/open-meteo-forecast.fixture";
 import { goodSurfMarineResponse } from "../../fixtures/open-meteo-marine.fixture";
 
+// Stub the global fetch so no real HTTP calls are made in tests.
 const mockFetch = vi.fn();
 
 beforeEach(() => {
@@ -16,6 +17,8 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+// Builds a minimal fetch Response-like object.
+// Passing a string triggers a JSON parse failure to test the bad-body path.
 function makeResponse(body: unknown, status = 200) {
   return {
     ok: status >= 200 && status < 300,
@@ -26,6 +29,9 @@ function makeResponse(body: unknown, status = 200) {
   };
 }
 
+// getForecast is critical — a failure here blocks the entire ranking result.
+// All failure modes must throw ExternalApiException so Apollo formatError can
+// sanitise the message before it reaches the client.
 describe("HttpOpenMeteoClient.getForecast", () => {
   const client = new HttpOpenMeteoClient();
 
@@ -41,11 +47,13 @@ describe("HttpOpenMeteoClient.getForecast", () => {
     await expect(client.getForecast(capeTownLocation)).rejects.toBeInstanceOf(ExternalApiException);
   });
 
+  // apiType lets the ranking service and Prometheus metrics distinguish forecast vs marine errors.
   it("ExternalApiException has apiType forecast on network failure", async () => {
     mockFetch.mockRejectedValue(new Error("Network error"));
     await expect(client.getForecast(capeTownLocation)).rejects.toMatchObject({ apiType: "forecast" });
   });
 
+  // httpStatus is captured so logs show whether the API was reachable but unhealthy (e.g. 503).
   it("throws ExternalApiException with httpStatus on non-OK response", async () => {
     mockFetch.mockResolvedValue(makeResponse({}, 503));
     await expect(client.getForecast(capeTownLocation)).rejects.toMatchObject({
@@ -54,17 +62,23 @@ describe("HttpOpenMeteoClient.getForecast", () => {
     });
   });
 
+  // A 200 response with a non-JSON body (e.g. an HTML error page) is a distinct failure mode.
   it("throws ExternalApiException when response body is not valid JSON", async () => {
     mockFetch.mockResolvedValue(makeResponse("not-json"));
     await expect(client.getForecast(capeTownLocation)).rejects.toBeInstanceOf(ExternalApiException);
   });
 
+  // isOperational: true means Apollo will forward the safe message to the client
+  // rather than returning a generic "Internal server error".
   it("ExternalApiException is operational", async () => {
     mockFetch.mockRejectedValue(new Error("timeout"));
     await expect(client.getForecast(capeTownLocation)).rejects.toMatchObject({ isOperational: true });
   });
 });
 
+// getMarineForecast is optional — not all locations have marine data and the marine
+// API can return errors for inland coordinates. All failure modes must return undefined
+// rather than throwing so the surfing scorer degrades gracefully instead of failing the whole request.
 describe("HttpOpenMeteoClient.getMarineForecast", () => {
   const client = new HttpOpenMeteoClient();
 

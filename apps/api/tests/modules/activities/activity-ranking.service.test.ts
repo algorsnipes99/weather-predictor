@@ -128,11 +128,16 @@ describe("ActivityRankingService", () => {
     });
   });
 
+  // Verifies that rank() isolates scorer failures — one bad scorer must not
+  // prevent the other three from returning results. Uses inline mock scorers
+  // rather than real ones so failures are deterministic and unconditional.
   describe("scorer failure isolation", () => {
+    // Throws a typed ActivityScoringException — the expected failure path (e.g. NaN guard).
     const throwingScorer: ActivityScorer = {
       activity: "SKIING",
       score: () => { throw new ActivityScoringException("SKIING", "forced failure"); },
     };
+    // Throws a plain Error — simulates an unexpected runtime bug in scorer code.
     const plainThrowingScorer: ActivityScorer = {
       activity: "SURFING",
       score: () => { throw new Error("unexpected boom"); },
@@ -146,6 +151,8 @@ describe("ActivityRankingService", () => {
       expect(result.activities[0].activity).toBe("OUTDOOR_SIGHTSEEING");
     });
 
+    // Plain Errors are wrapped in ActivityScoringException before logging so all
+    // failure logs have a consistent shape with the activity name attached.
     it("wraps a plain Error in ActivityScoringException and skips the scorer", () => {
       const service = new ActivityRankingService([plainThrowingScorer, new IndoorSightseeingScorer()]);
       const result = service.rank({ location: capeTownLocation, dailyWeather });
@@ -153,12 +160,16 @@ describe("ActivityRankingService", () => {
       expect(result.activities[0].activity).toBe("INDOOR_SIGHTSEEING");
     });
 
+    // Worst case: all scorers fail. The response is still valid — empty activities
+    // rather than a 500, so the client can show a graceful empty state.
     it("returns empty activities when all scorers fail", () => {
       const service = new ActivityRankingService([throwingScorer, plainThrowingScorer]);
       const result = service.rank({ location: capeTownLocation, dailyWeather });
       expect(result.activities).toHaveLength(0);
     });
 
+    // location and generatedAt must always be present — the client needs them
+    // to render the result header even when the activities list is empty.
     it("still returns location and generatedAt when scorers fail", () => {
       const service = new ActivityRankingService([throwingScorer]);
       const result = service.rank({ location: capeTownLocation, dailyWeather });
@@ -166,6 +177,8 @@ describe("ActivityRankingService", () => {
       expect(result.generatedAt).toBeTruthy();
     });
 
+    // Sort order must hold even with a reduced set — the client relies on the
+    // first activity being the highest-scored one.
     it("surviving scorers are still sorted by score", () => {
       const service = new ActivityRankingService([
         throwingScorer,
