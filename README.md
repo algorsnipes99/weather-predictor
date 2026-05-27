@@ -107,6 +107,18 @@ A separate metrics server runs on port 9090 inside the container, scraped by Pro
 
 ---
 
+## Further reading
+
+| Document | What it covers |
+|---|---|
+| [backend-overview.md](backend-overview.md) | How the backend works — scoring, weather pipeline, caching, and key limitations, written for a non-technical audience |
+| [frontend-overview.md](frontend-overview.md) | How the frontend works — the search flow, Google Places, and how it talks to the backend |
+| [metrics-overview.md](metrics-overview.md) | What Prometheus and Grafana are doing, what each dashboard panel means, and why monitoring is a separate stack |
+| [code-navigation.md](code-navigation.md) | A map of every important file in the codebase — start here when reviewing the code |
+| [ai-assisted-usage.md](ai-assisted-usage.md) | How AI was used across this project: what it built, what the developer directed, and where mistakes were made |
+
+---
+
 ## Omissions & trade-offs
 
 | Area | Status | Notes |
