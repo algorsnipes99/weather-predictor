@@ -13,6 +13,8 @@ export interface AppContext {
 
 export const resolvers = {
   Query: {
+    // Handles the `activityRankings` GraphQL query.
+    // Receives services pre-built in index.ts and injected per-request via Apollo context.
     activityRankings: async (
       _parent: unknown,
       args: { input: { location: { name: string; country?: string; latitude: number; longitude: number; timezone?: string } } },
@@ -20,11 +22,17 @@ export const resolvers = {
     ) => {
       const { location } = args.input;
 
+      // Return early if a cached result exists for this location — skips weather fetch and scoring.
+      // Cache key is lat/lon rounded to 2 decimal places (not location name), so two slightly
+      // different coordinates for the same city can share a cache entry. Entries expire after
+      // 6 hours — this prevents users from receiving stale forecasts on repeat visits or the
+      // following day. Expiry is enforced by the database (expires_at > NOW()), not a background job.
       if (context.rankingCache) {
         const cached = await context.rankingCache.get(location);
         if (cached) return cached;
       }
 
+      // Fetch 7-day forecast + marine data, then run all 4 activity scorers and sort by score.
       const weather = await context.weatherService.getSevenDayWeather(location);
       const result = context.activityRankingService.rank({
         location,
@@ -32,6 +40,7 @@ export const resolvers = {
         marineWeather: weather.marineDaily,
       });
 
+      // Fire-and-forget cache write — a write failure must never break the response.
       if (context.rankingCache) {
         context.rankingCache.set(result).catch(() => {});
       }

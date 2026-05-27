@@ -17,8 +17,11 @@ import { RankingCacheRepository } from "./modules/rankings/ranking-cache.reposit
 import { authRouter } from "./auth/auth.router.js";
 import { requireAuth } from "./auth/auth.middleware.js";
 
+// Wire up the Open-Meteo HTTP client and weather service
 const client = new HttpOpenMeteoClient();
 const weatherService = new WeatherService(client);
+
+// Register all activity scorers — add a new scorer here to include it in rankings
 const activityRankingService = new ActivityRankingService([
   new SkiingScorer(),
   new SurfingScorer(),
@@ -26,6 +29,7 @@ const activityRankingService = new ActivityRankingService([
   new IndoorSightseeingScorer(),
 ]);
 
+// Connect to Postgres if DATABASE_URL is set; cache is optional and degrades gracefully
 const dbPool = getDbPool();
 const rankingCache = dbPool ? new RankingCacheRepository(dbPool) : null;
 
@@ -42,21 +46,25 @@ app.use(json());
 // Public routes — no auth required
 app.use("/auth", authRouter);
 
+// Start Apollo before mounting it as Express middleware
 const server = new ApolloServer<AppContext>({ typeDefs, resolvers });
 await server.start();
 
-// All GraphQL requests must carry a valid JWT
+// Built once per request and passed into every resolver via Apollo context.
+// req.user is guaranteed non-null here because requireAuth runs first and
+// returns 401 before Apollo is reached if the token is missing or invalid.
+const buildContext = async ({ req }: { req: express.Request }): Promise<AppContext> => ({
+  weatherService,
+  activityRankingService,
+  rankingCache,
+  user: req.user!,
+});
+
+// All GraphQL requests must carry a valid JWT — requireAuth enforces this before Apollo runs
 app.use(
   "/graphql",
   requireAuth,
-  expressMiddleware(server, {
-    context: async ({ req }) => ({
-      weatherService,
-      activityRankingService,
-      rankingCache,
-      user: req.user!,
-    }),
-  })
+  expressMiddleware(server, { context: buildContext })
 );
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 4000;
