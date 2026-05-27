@@ -1,6 +1,11 @@
 import pg from "pg";
 import { ActivityRankingResult } from "../activities/activity.types";
 import { ResolvedLocation } from "../location/location.types";
+import {
+  rankingCacheHitsTotal,
+  rankingCacheMissesTotal,
+  rankingCacheWriteDuration,
+} from "../../metrics/registry.js";
 
 const CACHE_TTL_HOURS = 6;
 
@@ -21,7 +26,13 @@ export class RankingCacheRepository {
       [latKey, lonKey]
     );
 
-    return rows[0]?.result ?? null;
+    const cached = rows[0]?.result ?? null;
+    if (cached) {
+      rankingCacheHitsTotal.inc();
+    } else {
+      rankingCacheMissesTotal.inc();
+    }
+    return cached;
   }
 
   async set(result: ActivityRankingResult): Promise<void> {
@@ -29,6 +40,7 @@ export class RankingCacheRepository {
     const latKey = roundCoord(location.latitude);
     const lonKey = roundCoord(location.longitude);
 
+    const start = process.hrtime.bigint();
     await this.pool.query(
       `INSERT INTO ranking_cache
          (lat_key, lon_key, location_name, location_country, location_timezone, result, expires_at)
@@ -49,5 +61,6 @@ export class RankingCacheRepository {
         JSON.stringify(result),
       ]
     );
+    rankingCacheWriteDuration.observe(Number(process.hrtime.bigint() - start) / 1e9);
   }
 }

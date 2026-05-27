@@ -3,6 +3,10 @@ import {
   OpenMeteoForecastResponse,
   OpenMeteoMarineResponse,
 } from "./open-meteo.types";
+import {
+  weatherFetchDuration,
+  weatherFetchErrorsTotal,
+} from "../../metrics/registry.js";
 
 export interface OpenMeteoClient {
   getForecast(location: ResolvedLocation): Promise<OpenMeteoForecastResponse>;
@@ -34,10 +38,16 @@ export class HttpOpenMeteoClient implements OpenMeteoClient {
       ...(location.timezone ? { timezone: location.timezone } : {}),
     });
 
-    const res = await fetch(`${this.forecastBaseUrl}?${params}`);
+    const start = process.hrtime.bigint();
+    const res = await fetch(`${this.forecastBaseUrl}?${params}`).catch((err) => {
+      weatherFetchErrorsTotal.inc({ type: "forecast" });
+      throw err;
+    });
     if (!res.ok) {
+      weatherFetchErrorsTotal.inc({ type: "forecast" });
       throw new Error(`Open-Meteo forecast failed: ${res.status}`);
     }
+    weatherFetchDuration.observe({ type: "forecast" }, Number(process.hrtime.bigint() - start) / 1e9);
     return res.json() as Promise<OpenMeteoForecastResponse>;
   }
 
@@ -57,8 +67,13 @@ export class HttpOpenMeteoClient implements OpenMeteoClient {
       ...(location.timezone ? { timezone: location.timezone } : {}),
     });
 
-    const res = await fetch(`${this.marineBaseUrl}?${params}`);
-    if (!res.ok) return undefined;
+    const start = process.hrtime.bigint();
+    const res = await fetch(`${this.marineBaseUrl}?${params}`).catch(() => undefined);
+    if (!res || !res.ok) {
+      if (!res) weatherFetchErrorsTotal.inc({ type: "marine" });
+      return undefined;
+    }
+    weatherFetchDuration.observe({ type: "marine" }, Number(process.hrtime.bigint() - start) / 1e9);
     return res.json() as Promise<OpenMeteoMarineResponse>;
   }
 }

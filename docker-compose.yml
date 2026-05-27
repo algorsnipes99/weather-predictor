@@ -8,6 +8,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-weather}:${POSTGRES_PASSWORD:-weather_password}@db:5432/${POSTGRES_DB:-weather_predictor}
+      METRICS_PORT: 9090
     depends_on:
       db:
         condition: service_healthy

@@ -16,6 +16,9 @@ import { getDbPool } from "./db/db.client.js";
 import { RankingCacheRepository } from "./modules/rankings/ranking-cache.repository.js";
 import { authRouter } from "./auth/auth.router.js";
 import { requireAuth } from "./auth/auth.middleware.js";
+import { startMetricsServer } from "./metrics/metrics.server.js";
+import { httpMetricsMiddleware } from "./metrics/http.middleware.js";
+import { metricsPlugin } from "./metrics/apollo.plugin.js";
 
 // Wire up the Open-Meteo HTTP client and weather service
 const client = new HttpOpenMeteoClient();
@@ -42,12 +45,13 @@ if (rankingCache) {
 const app = express();
 app.use(cors());
 app.use(json());
+app.use(httpMetricsMiddleware);
 
 // Public routes — no auth required
 app.use("/auth", authRouter);
 
 // Start Apollo before mounting it as Express middleware
-const server = new ApolloServer<AppContext>({ typeDefs, resolvers });
+const server = new ApolloServer<AppContext>({ typeDefs, resolvers, plugins: [metricsPlugin] });
 await server.start();
 
 // Built once per request and passed into every resolver via Apollo context.
@@ -73,3 +77,6 @@ app.listen(PORT, () => {
   console.log(`GraphQL endpoint: http://localhost:${PORT}/graphql`);
   console.log(`Auth endpoint:    http://localhost:${PORT}/auth/token`);
 });
+
+const METRICS_PORT = process.env.METRICS_PORT ? parseInt(process.env.METRICS_PORT) : 9090;
+startMetricsServer(METRICS_PORT);

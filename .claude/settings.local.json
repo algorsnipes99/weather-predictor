@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(chmod +x /c/dev/weather-predictor/scripts/docker-build.sh)"
+      "Bash(chmod +x /c/dev/weather-predictor/scripts/docker-build.sh)",
+      "PowerShell(docker network ls --format \"table {{.Name}}\\\\t{{.Driver}}\" 2>&1)"
     ]
   }
 }
