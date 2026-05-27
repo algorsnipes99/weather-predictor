@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
     ports:
-      - "4000:4000"
+      - "${PORT_API:-4000}:4000"
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-weather}:${POSTGRES_PASSWORD:-weather_password}@db:5432/${POSTGRES_DB:-weather_predictor}
@@ -23,7 +23,7 @@ services:
       args:
         VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY:-}
     ports:
-      - "3000:80"
+      - "${PORT_WEB:-3000}:80"
     depends_on:
       - api
     networks:
@@ -40,7 +40,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./apps/api/src/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
-      - "5432:5432"
+      - "${PORT_DB:-5432}:5432"
     networks:
       - weather-net
     restart: unless-stopped

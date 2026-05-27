@@ -4,7 +4,7 @@ services:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
-      - "9091:9090"
+      - "${PORT_PROMETHEUS:-9091}:9090"
     networks:
       - weather-predictor_weather-net
     restart: unless-stopped
@@ -12,7 +12,7 @@ services:
   grafana:
     image: grafana/grafana:10.4.0
     ports:
-      - "3001:3000"
+      - "${PORT_GRAFANA:-3001}:3000"
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
     volumes:

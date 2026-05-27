@@ -3,6 +3,19 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+# Load .env so port variables are available for the summary output below
+if [ -f .env ]; then
+  set -o allexport
+  # shellcheck disable=SC1091
+  source .env
+  set +o allexport
+fi
+
+PORT_WEB=${PORT_WEB:-3000}
+PORT_API=${PORT_API:-4000}
+PORT_GRAFANA=${PORT_GRAFANA:-3001}
+PORT_PROMETHEUS=${PORT_PROMETHEUS:-9091}
+
 echo "Stopping all containers..."
 docker compose -f monitoring/docker-compose.yml down --remove-orphans 2>/dev/null || true
 docker compose down --remove-orphans
@@ -18,7 +31,7 @@ docker compose -f monitoring/docker-compose.yml up -d
 
 echo ""
 echo "All containers running."
-echo "  App:        http://localhost:3000"
-echo "  API:        http://localhost:4000/graphql"
-echo "  Grafana:    http://localhost:3001  (admin / admin)"
-echo "  Prometheus: http://localhost:9091"
+echo "  App:        http://localhost:$PORT_WEB"
+echo "  API:        http://localhost:$PORT_API/graphql"
+echo "  Grafana:    http://localhost:$PORT_GRAFANA  (admin / admin)"
+echo "  Prometheus: http://localhost:$PORT_PROMETHEUS"
