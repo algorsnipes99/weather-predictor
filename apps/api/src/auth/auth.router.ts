@@ -1,8 +1,13 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { signToken } from "./jwt.js";
 
 const DEMO_USERNAME = "demo";
 const DEMO_PASSWORD = "demo";
+
+interface TokenRequestBody {
+  username: string;
+  password: string;
+}
 
 /**
  * Auth router — exposes POST /auth/token.
@@ -13,7 +18,7 @@ const DEMO_PASSWORD = "demo";
  */
 export const authRouter = Router();
 
-authRouter.post("/token", (req, res) => {
+authRouter.post("/token", (req: Request<object, object, TokenRequestBody>, res: Response): void => {
   const { username, password } = req.body ?? {};
 
   if (username !== DEMO_USERNAME || password !== DEMO_PASSWORD) {

@@ -54,7 +54,7 @@ export class HttpOpenMeteoClient implements OpenMeteoClient {
       throw new Error(`Open-Meteo forecast failed: ${res.status}`);
     }
     weatherFetchDuration.observe({ type: "forecast" }, Number(process.hrtime.bigint() - start) / 1e9);
-    return res.json() as Promise<OpenMeteoForecastResponse>;
+    return (await res.json()) as OpenMeteoForecastResponse;
   }
 
   /** Fetches the 7-day marine forecast. Returns `undefined` rather than throwing — not all locations have marine data. */
@@ -81,6 +81,6 @@ export class HttpOpenMeteoClient implements OpenMeteoClient {
       return undefined;
     }
     weatherFetchDuration.observe({ type: "marine" }, Number(process.hrtime.bigint() - start) / 1e9);
-    return res.json() as Promise<OpenMeteoMarineResponse>;
+    return (await res.json()) as OpenMeteoMarineResponse;
   }
 }

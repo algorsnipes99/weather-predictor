@@ -19,7 +19,13 @@ export function signToken(sub: string): string {
 /**
  * Verifies a JWT and returns its decoded payload.
  * Throws `JsonWebTokenError` or `TokenExpiredError` on failure.
+ * Reconstructs the payload explicitly rather than casting so a malformed
+ * token cannot silently pass through with the wrong shape.
  */
 export function verifyToken(token: string): TokenPayload {
-  return jwt.verify(token, SECRET) as TokenPayload;
+  const decoded = jwt.verify(token, SECRET);
+  if (typeof decoded === "string" || typeof decoded.sub !== "string") {
+    throw new Error("Invalid token payload");
+  }
+  return { sub: decoded.sub, role: "user" };
 }

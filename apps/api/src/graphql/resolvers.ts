@@ -2,6 +2,8 @@ import { WeatherService } from "../modules/weather/weather.service";
 import { ActivityRankingService } from "../modules/activities/activity-ranking.service";
 import { RankingCacheRepository } from "../modules/rankings/ranking-cache.repository";
 import { TokenPayload } from "../auth/jwt";
+import { ResolvedLocation } from "../modules/location/location.types";
+import { ActivityRankingResult } from "../modules/activities/activity.types";
 
 export interface AppContext {
   weatherService: WeatherService;
@@ -10,15 +12,21 @@ export interface AppContext {
   user: TokenPayload;
 }
 
+interface ActivityRankingInput {
+  location: ResolvedLocation;
+}
+
+interface ActivityRankingsArgs {
+  input: ActivityRankingInput;
+}
+
 export const resolvers = {
   Query: {
-    // Handles the `activityRankings` GraphQL query.
-    // Receives services pre-built in index.ts and injected per-request via Apollo context.
     activityRankings: async (
       _parent: unknown,
-      args: { input: { location: { name: string; country?: string; latitude: number; longitude: number; timezone?: string } } },
+      args: ActivityRankingsArgs,
       context: AppContext
-    ) => {
+    ): Promise<ActivityRankingResult> => {
       const { location } = args.input;
 
       // Return early if a cached result exists for this location — skips weather fetch and scoring.

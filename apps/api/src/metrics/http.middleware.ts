@@ -11,7 +11,7 @@ export function httpMetricsMiddleware(req: Request, res: Response, next: NextFun
 
   res.on("finish", () => {
     const durationSeconds = Number(process.hrtime.bigint() - start) / 1e9;
-    const route = (req.route?.path as string | undefined) ?? req.path;
+    const route = typeof req.route?.path === "string" ? req.route.path : req.path;
     const labels = {
       method: req.method,
       route,
