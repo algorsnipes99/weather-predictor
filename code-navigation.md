@@ -90,7 +90,6 @@ Demo credentials: `username: demo`, `password: demo`. See [auth_plan.md](ai-docu
 |---|---|
 | `clamp`, `average`, `roundScore` — used by all scorers | [apps/api/src/shared/math.ts](apps/api/src/shared/math.ts) |
 | `labelForScore` — converts a 0–100 score to EXCELLENT / GOOD / FAIR / POOR | [apps/api/src/shared/labels.ts](apps/api/src/shared/labels.ts) |
-| Custom error types (`WeatherFetchError`, `InvalidLocationError`) | [apps/api/src/shared/errors.ts](apps/api/src/shared/errors.ts) |
 | Location type (`ResolvedLocation`) | [apps/api/src/modules/location/location.types.ts](apps/api/src/modules/location/location.types.ts) |
 
 ---

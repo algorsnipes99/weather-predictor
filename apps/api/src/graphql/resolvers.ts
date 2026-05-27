@@ -1,14 +1,10 @@
 import { WeatherService } from "../modules/weather/weather.service";
 import { ActivityRankingService } from "../modules/activities/activity-ranking.service";
 import { RankingCacheRepository } from "../modules/rankings/ranking-cache.repository";
-import { TokenPayload } from "../auth/jwt.js";
-
 export interface AppContext {
   weatherService: WeatherService;
   activityRankingService: ActivityRankingService;
   rankingCache: RankingCacheRepository | null;
-  /** Decoded JWT payload — always present because `requireAuth` runs before GraphQL. */
-  user: TokenPayload;
 }
 
 export const resolvers = {
