@@ -19,6 +19,7 @@ import { requireAuth } from "./auth/auth.middleware.js";
 import { startMetricsServer } from "./metrics/metrics.server.js";
 import { httpMetricsMiddleware } from "./metrics/http.middleware.js";
 import { metricsPlugin } from "./metrics/apollo.plugin.js";
+import { AppError } from "./shared/errors.js";
 
 // Wire up the Open-Meteo HTTP client and weather service
 const client = new HttpOpenMeteoClient();
@@ -51,7 +52,19 @@ app.use(httpMetricsMiddleware);
 app.use("/auth", authRouter);
 
 // Start Apollo before mounting it as Express middleware
-const server = new ApolloServer<AppContext>({ typeDefs, resolvers, plugins: [metricsPlugin] });
+const server = new ApolloServer<AppContext>({
+  typeDefs,
+  resolvers,
+  plugins: [metricsPlugin],
+  formatError: (_formattedError, err) => {
+    const cause = (err as { originalError?: unknown }).originalError ?? err;
+    if (cause instanceof AppError && cause.isOperational) {
+      return { message: cause.message, extensions: { code: cause.code } };
+    }
+    console.error("[Apollo] Unexpected error:", cause);
+    return { message: "Internal server error", extensions: { code: "INTERNAL_ERROR" } };
+  },
+});
 await server.start();
 
 // Built once per request and passed into every resolver via Apollo context.

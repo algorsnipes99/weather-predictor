@@ -4,6 +4,8 @@ import { SkiingScorer } from "../../../src/modules/activities/scoring/skiing.sco
 import { SurfingScorer } from "../../../src/modules/activities/scoring/surfing.scorer";
 import { OutdoorSightseeingScorer } from "../../../src/modules/activities/scoring/outdoor-sightseeing.scorer";
 import { IndoorSightseeingScorer } from "../../../src/modules/activities/scoring/indoor-sightseeing.scorer";
+import { ActivityScorer } from "../../../src/modules/activities/scoring/activity-scorer.interface";
+import { ActivityScoringException } from "../../../src/shared/errors";
 import { mapOpenMeteoForecastToDailyWeather } from "../../../src/modules/weather/open-meteo.mapper";
 import { mapOpenMeteoMarineToDailyWeather } from "../../../src/modules/weather/open-meteo-marine.mapper";
 import {
@@ -123,6 +125,56 @@ describe("ActivityRankingService", () => {
     it("still returns location and generatedAt", () => {
       expect(result.location).toEqual(capeTownLocation);
       expect(result.generatedAt).toBeTruthy();
+    });
+  });
+
+  describe("scorer failure isolation", () => {
+    const throwingScorer: ActivityScorer = {
+      activity: "SKIING",
+      score: () => { throw new ActivityScoringException("SKIING", "forced failure"); },
+    };
+    const plainThrowingScorer: ActivityScorer = {
+      activity: "SURFING",
+      score: () => { throw new Error("unexpected boom"); },
+    };
+    const dailyWeather = mapOpenMeteoForecastToDailyWeather(mixedForecastResponse);
+
+    it("skips the failing scorer and returns the rest", () => {
+      const service = new ActivityRankingService([throwingScorer, new OutdoorSightseeingScorer()]);
+      const result = service.rank({ location: capeTownLocation, dailyWeather });
+      expect(result.activities).toHaveLength(1);
+      expect(result.activities[0].activity).toBe("OUTDOOR_SIGHTSEEING");
+    });
+
+    it("wraps a plain Error in ActivityScoringException and skips the scorer", () => {
+      const service = new ActivityRankingService([plainThrowingScorer, new IndoorSightseeingScorer()]);
+      const result = service.rank({ location: capeTownLocation, dailyWeather });
+      expect(result.activities).toHaveLength(1);
+      expect(result.activities[0].activity).toBe("INDOOR_SIGHTSEEING");
+    });
+
+    it("returns empty activities when all scorers fail", () => {
+      const service = new ActivityRankingService([throwingScorer, plainThrowingScorer]);
+      const result = service.rank({ location: capeTownLocation, dailyWeather });
+      expect(result.activities).toHaveLength(0);
+    });
+
+    it("still returns location and generatedAt when scorers fail", () => {
+      const service = new ActivityRankingService([throwingScorer]);
+      const result = service.rank({ location: capeTownLocation, dailyWeather });
+      expect(result.location).toEqual(capeTownLocation);
+      expect(result.generatedAt).toBeTruthy();
+    });
+
+    it("surviving scorers are still sorted by score", () => {
+      const service = new ActivityRankingService([
+        throwingScorer,
+        new OutdoorSightseeingScorer(),
+        new IndoorSightseeingScorer(),
+      ]);
+      const result = service.rank({ location: capeTownLocation, dailyWeather });
+      expect(result.activities).toHaveLength(2);
+      expect(result.activities[0].score).toBeGreaterThanOrEqual(result.activities[1].score);
     });
   });
 

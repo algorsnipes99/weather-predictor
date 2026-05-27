@@ -3,6 +3,7 @@ import { labelForScore } from "../../../shared/labels";
 import { ActivityScorer } from "./activity-scorer.interface";
 import { Activity, ActivityRanking, ActivityScoringInput, DailyActivityScore } from "../activity.types";
 import { DailyWeather, DailyMarineWeather } from "../../weather/weather.types";
+import { ActivityScoringException } from "../../../shared/errors";
 
 /**
  * Shared scoring skeleton for all activity scorers.
@@ -22,9 +23,16 @@ export abstract class BaseActivityScorer implements ActivityScorer {
    * and returns the full `ActivityRanking` with label and summary.
    */
   score(input: ActivityScoringInput): ActivityRanking {
-    const days = input.dailyWeather.map((day, i) =>
-      this.scoreDay(day, input.marineWeather?.[i])
-    );
+    const days = input.dailyWeather.map((day, i) => {
+      const result = this.scoreDay(day, input.marineWeather?.[i]);
+      if (isNaN(result.score)) {
+        throw new ActivityScoringException(
+          this.activity,
+          `Scorer for ${this.activity} produced NaN on ${day.date} — likely received unexpected null/undefined weather data.`,
+        );
+      }
+      return result;
+    });
     const overall = roundScore(average(days.map((d) => d.score)));
     const raw = this.activity.replace(/_/g, " ").toLowerCase();
     const activityName = raw.charAt(0).toUpperCase() + raw.slice(1);

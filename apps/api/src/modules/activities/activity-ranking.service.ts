@@ -3,6 +3,7 @@ import {
   ActivityScoringInput,
 } from "./activity.types";
 import { ActivityScorer } from "./scoring/activity-scorer.interface";
+import { ActivityScoringException } from "../../shared/errors";
 
 /**
  * Orchestrates all registered activity scorers and returns their results
@@ -17,7 +18,21 @@ export class ActivityRankingService {
    */
   rank(input: ActivityScoringInput): ActivityRankingResult {
     const activities = this.scorers
-      .map((scorer) => scorer.score(input))
+      .flatMap((scorer) => {
+        try {
+          return [scorer.score(input)];
+        } catch (err) {
+          const wrapped =
+            err instanceof ActivityScoringException
+              ? err
+              : new ActivityScoringException(
+                  scorer.activity,
+                  err instanceof Error ? err.message : undefined,
+                );
+          console.error(`[ActivityRankingService] Scorer failed — skipping ${scorer.activity}:`, wrapped);
+          return [];
+        }
+      })
       .sort((a, b) => b.score - a.score);
 
     return {

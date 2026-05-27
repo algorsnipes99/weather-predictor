@@ -7,6 +7,7 @@ import {
   weatherFetchDuration,
   weatherFetchErrorsTotal,
 } from "../../metrics/registry.js";
+import { ExternalApiException } from "../../shared/errors.js";
 
 export interface OpenMeteoClient {
   getForecast(location: ResolvedLocation): Promise<OpenMeteoForecastResponse>;
@@ -36,7 +37,7 @@ export class HttpOpenMeteoClient implements OpenMeteoClient {
     });
   }
 
-  /** Fetches the 7-day general forecast. Throws on network error or non-OK response. */
+  /** Fetches the 7-day general forecast. Throws on network error, non-OK response, or malformed body. */
   async getForecast(location: ResolvedLocation): Promise<OpenMeteoForecastResponse> {
     const params = this.buildParams(location, [
       "temperature_2m_min",
@@ -49,16 +50,24 @@ export class HttpOpenMeteoClient implements OpenMeteoClient {
     ]);
 
     const start = process.hrtime.bigint();
-    const res = await fetch(`${this.forecastBaseUrl}?${params}`).catch((err) => {
+    const res = await fetch(`${this.forecastBaseUrl}?${params}`).catch((err: unknown) => {
       weatherFetchErrorsTotal.inc({ type: "forecast" });
-      throw err;
+      throw new ExternalApiException("forecast", undefined, (err instanceof Error ? err.message : undefined));
     });
+
     if (!res.ok) {
       weatherFetchErrorsTotal.inc({ type: "forecast" });
-      throw new Error(`Open-Meteo forecast failed: ${res.status}`);
+      throw new ExternalApiException("forecast", res.status);
     }
-    weatherFetchDuration.observe({ type: "forecast" }, Number(process.hrtime.bigint() - start) / 1e9);
-    return (await res.json()) as OpenMeteoForecastResponse;
+
+    try {
+      const data = await res.json();
+      weatherFetchDuration.observe({ type: "forecast" }, Number(process.hrtime.bigint() - start) / 1e9);
+      return data as OpenMeteoForecastResponse;
+    } catch {
+      weatherFetchErrorsTotal.inc({ type: "forecast" });
+      throw new ExternalApiException("forecast", res.status, "Weather service returned an unreadable response.");
+    }
   }
 
   /** Fetches the 7-day marine forecast. Returns `undefined` rather than throwing — not all locations have marine data. */
@@ -75,10 +84,17 @@ export class HttpOpenMeteoClient implements OpenMeteoClient {
     const start = process.hrtime.bigint();
     const res = await fetch(`${this.marineBaseUrl}?${params}`).catch(() => undefined);
     if (!res || !res.ok) {
-      if (!res) weatherFetchErrorsTotal.inc({ type: "marine" });
+      weatherFetchErrorsTotal.inc({ type: "marine" });
       return undefined;
     }
-    weatherFetchDuration.observe({ type: "marine" }, Number(process.hrtime.bigint() - start) / 1e9);
-    return (await res.json()) as OpenMeteoMarineResponse;
+
+    try {
+      const data = await res.json();
+      weatherFetchDuration.observe({ type: "marine" }, Number(process.hrtime.bigint() - start) / 1e9);
+      return data as OpenMeteoMarineResponse;
+    } catch {
+      weatherFetchErrorsTotal.inc({ type: "marine" });
+      return undefined;
+    }
   }
 }
