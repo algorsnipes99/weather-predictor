@@ -4,6 +4,12 @@ Ranks four activities (Skiing, Surfing, Outdoor Sightseeing, Indoor Sightseeing)
 
 ---
 
+## Requirements
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) — everything runs in containers, no other installs needed.
+
+---
+
 ## Setup
 
 **1. Copy the env file and fill in your values:**
