@@ -15,12 +15,18 @@ export interface OpenMeteoClient {
   ): Promise<OpenMeteoMarineResponse | undefined>;
 }
 
+/**
+ * Live HTTP implementation of `OpenMeteoClient`.
+ * Records fetch duration and error metrics for both forecast and marine calls.
+ * Throws on forecast failure; returns `undefined` on marine failure (marine is optional).
+ */
 export class HttpOpenMeteoClient implements OpenMeteoClient {
   private readonly forecastBaseUrl =
     "https://api.open-meteo.com/v1/forecast";
   private readonly marineBaseUrl =
     "https://marine-api.open-meteo.com/v1/marine";
 
+  /** Fetches the 7-day general forecast. Throws on network error or non-OK response. */
   async getForecast(location: ResolvedLocation): Promise<OpenMeteoForecastResponse> {
     const params = new URLSearchParams({
       latitude: String(location.latitude),
@@ -51,6 +57,7 @@ export class HttpOpenMeteoClient implements OpenMeteoClient {
     return res.json() as Promise<OpenMeteoForecastResponse>;
   }
 
+  /** Fetches the 7-day marine forecast. Returns `undefined` rather than throwing — not all locations have marine data. */
   async getMarineForecast(
     location: ResolvedLocation
   ): Promise<OpenMeteoMarineResponse | undefined> {

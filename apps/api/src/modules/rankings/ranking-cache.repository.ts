@@ -9,13 +9,20 @@ import {
 
 const CACHE_TTL_HOURS = 6;
 
+/** Rounds to 2 decimal places (~1km precision) so nearby searches share the same cache entry. */
 function roundCoord(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+/**
+ * Postgres-backed cache for activity ranking results.
+ * Keyed by rounded lat/lon with a configurable TTL — duplicate searches
+ * within the window skip the Open-Meteo API calls entirely.
+ */
 export class RankingCacheRepository {
   constructor(private readonly pool: pg.Pool) {}
 
+  /** Returns a cached result for the location if one exists and has not expired, otherwise null. */
   async get(location: ResolvedLocation): Promise<ActivityRankingResult | null> {
     const latKey = roundCoord(location.latitude);
     const lonKey = roundCoord(location.longitude);
@@ -35,6 +42,7 @@ export class RankingCacheRepository {
     return cached;
   }
 
+  /** Upserts a ranking result, resetting the TTL. Conflicts on lat/lon key update in place. */
   async set(result: ActivityRankingResult): Promise<void> {
     const { location } = result;
     const latKey = roundCoord(location.latitude);

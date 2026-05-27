@@ -1,6 +1,11 @@
 import type { ApolloServerPlugin } from "@apollo/server";
 import { graphqlOperationDuration, graphqlErrorsTotal } from "./registry.js";
 
+/**
+ * Apollo Server plugin that records GraphQL operation duration and error count.
+ * Timing starts at `requestDidStart` and is observed in `willSendResponse`,
+ * labelled by operation name so each query type is tracked separately.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const metricsPlugin: ApolloServerPlugin<any> = {
   async requestDidStart() {
