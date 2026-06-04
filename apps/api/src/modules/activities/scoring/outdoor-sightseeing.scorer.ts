@@ -25,8 +25,8 @@ export class OutdoorSightseeingScorer extends BaseActivityScorer {
         : avgTemp < 0 || avgTemp > 35
         ? 20
         : avgTemp < 15
-        ? clamp(20 + ((avgTemp - 0) / 15) * 80)
-        : clamp(100 - ((avgTemp - 25) / 10) * 80);
+        ? clamp(20 + ((avgTemp - 0) / 15) * 80) // scale up from cold 0-14
+        : clamp(100 - ((avgTemp - 25) / 10) * 80); // scale down from hot 26-35
     if (avgTemp < 5) reasons.push(`Very cold: avg ${avgTemp.toFixed(0)}°C`);
     else if (avgTemp > 32) reasons.push(`Very hot: avg ${avgTemp.toFixed(0)}°C`);
 

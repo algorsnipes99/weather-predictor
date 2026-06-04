@@ -1,20 +1,46 @@
-import { clamp, roundScore } from "../../../shared/math";
+import { clamp, roundScore, average } from "../../../shared/math";
 import { labelForScore } from "../../../shared/labels";
 import { BaseActivityScorer } from "./base-activity-scorer";
-import { Activity, DailyActivityScore } from "../activity.types";
+import { Activity, ActivityRanking, ActivityScoringInput, DailyActivityScore } from "../activity.types";
 import { DailyWeather } from "../../weather/weather.types";
 
 /**
  * Scores indoor sightseeing as the inverse of outdoor suitability.
- * High rain, extreme temperatures, strong wind, and severe weather codes
- * all push the indoor score up.
+ * When the outdoor sightseeing result is available via the dependency map,
+ * daily scores are inverted directly (100 - outdoorScore) rather than
+ * recalculating shared weather signals from scratch.
+ * Falls back to independent calculation if the dependency is unavailable.
  */
 export class IndoorSightseeingScorer extends BaseActivityScorer {
   readonly activity: Activity = "INDOOR_SIGHTSEEING";
+  readonly dependsOn: Activity = "OUTDOOR_SIGHTSEEING";
+
+  score(input: ActivityScoringInput, dependencies?: Map<Activity, ActivityRanking>): ActivityRanking {
+    const outdoor = dependencies?.get("OUTDOOR_SIGHTSEEING");
+
+    if (outdoor) {
+      const days = outdoor.days.map((day) => {
+        const score = roundScore(clamp(100 - day.score));
+        return { date: day.date, score, label: labelForScore(score), reasons: day.reasons };
+      });
+      const overall = roundScore(average(days.map((d) => d.score)));
+      const raw = this.activity.replace(/_/g, " ").toLowerCase();
+      const activityName = raw.charAt(0).toUpperCase() + raw.slice(1);
+      return {
+        activity: this.activity,
+        score: overall,
+        label: labelForScore(overall),
+        summary: `${activityName} conditions over 7 days averaged ${overall}/100.`,
+        days,
+      };
+    }
+
+    return super.score(input);
+  }
 
   /**
+   * Fallback: used only when outdoor sightseeing result is unavailable.
    * Weights: rain 35%, weather code badness 25%, uncomfortable temperature 25%, wind 15%.
-   * Intentionally mirrors OutdoorSightseeingScorer so the two invert each other.
    */
   protected scoreDay(day: DailyWeather): DailyActivityScore {
     const reasons: string[] = [];

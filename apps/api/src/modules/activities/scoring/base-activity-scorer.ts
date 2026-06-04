@@ -22,7 +22,7 @@ export abstract class BaseActivityScorer implements ActivityScorer {
    * Maps `scoreDay` over every day in the input, averages the results,
    * and returns the full `ActivityRanking` with label and summary.
    */
-  score(input: ActivityScoringInput): ActivityRanking {
+  score(input: ActivityScoringInput, _dependencies?: Map<Activity, ActivityRanking>): ActivityRanking {
     const days = input.dailyWeather.map((day, i) => {
       const result = this.scoreDay(day, input.marineWeather?.[i]);
       if (isNaN(result.score)) {
